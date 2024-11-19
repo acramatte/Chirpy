@@ -16,6 +16,7 @@
 !go.mod
 
 !*.html
+!/assets/*
 
 !README.md
 !LICENSE
