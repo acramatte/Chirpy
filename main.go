@@ -43,7 +43,7 @@ func main() {
 	apiCfg.fileserverHits.Store(0)
 
 	serveMux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", fs)))
-	serveMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	serveMux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte("OK"))
@@ -52,8 +52,8 @@ func main() {
 			log.Println("Fail to write healthz response:", err)
 		}
 	})
-	serveMux.HandleFunc("/metrics", apiCfg.handlerMetrics)
-	serveMux.HandleFunc("/reset", apiCfg.metricsReset)
+	serveMux.HandleFunc("GET /metrics", apiCfg.handlerMetrics)
+	serveMux.HandleFunc("POST /reset", apiCfg.metricsReset)
 
 	server := &http.Server{
 		Addr:    ":8080",
