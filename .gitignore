@@ -21,6 +21,11 @@
 !README.md
 !LICENSE
 
+# DB stuff
+!sql/schema/*
+!sql/queries/*
+!sqlc.yaml
+
 # !Makefile
 
 # ...even if they are in subdirectories

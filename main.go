@@ -1,8 +1,13 @@
 package main
 
 import (
+	"database/sql"
+	"github.com/acramatte/Chirpy/internal/database"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
+	"os"
 	"sync/atomic"
 )
 
@@ -11,6 +16,17 @@ type apiConfig struct {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_ = database.New(db)
+
 	fs := http.FileServer(http.Dir("."))
 	apiCfg := apiConfig{}
 	apiCfg.fileserverHits.Store(0)
