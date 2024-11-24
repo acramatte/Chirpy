@@ -6,15 +6,6 @@ import (
 	"net/http"
 )
 
-func (cfg *apiConfig) metricsReset(w http.ResponseWriter, r *http.Request) {
-	cfg.fileserverHits.Store(0)
-	w.WriteHeader(http.StatusOK)
-	_, err := w.Write([]byte("Hits reset to 0"))
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		log.Println("Fail to reset metrics:", err)
-	}
-}
 func (cfg *apiConfig) handlerMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
