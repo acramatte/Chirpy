@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/acramatte/Chirpy/internal/auth"
+	"github.com/acramatte/Chirpy/internal/database"
 	"github.com/google/uuid"
 	"net/http"
 	"time"
@@ -11,12 +13,14 @@ type User struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	Password  string    `json:"password"`
 	Email     string    `json:"email"`
 }
 
 func (cfg *apiConfig) handlerUsersCreation(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Email string `json:"email"`
+		Password string `json:"password"`
+		Email    string `json:"email"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -28,7 +32,12 @@ func (cfg *apiConfig) handlerUsersCreation(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	user, err := cfg.db.CreateUser(r.Context(), params.Email)
+	hashedPassword, err := auth.HashPassword(params.Password)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't hash password", err)
+		return
+	}
+	user, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{params.Email, hashedPassword})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create user", err)
 	}
