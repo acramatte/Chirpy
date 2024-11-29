@@ -1,7 +1,10 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -26,7 +29,7 @@ func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (str
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Issuer:    "chirpy",
 		Subject:   userID.String(),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(expiresIn)),
 		IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 	})
 	return token.SignedString([]byte(tokenSecret))
@@ -67,4 +70,17 @@ func GetBearerToken(headers http.Header) (string, error) {
 		return "", errors.New("No Authorization header found")
 	}
 	return tokenString, nil
+}
+
+// MakeRefreshToken generates a random 256-bit (32-byte) hex-encoded string.
+func MakeRefreshToken() (string, error) {
+	// Create a byte slice of length 32
+	token := make([]byte, 32)
+
+	// Read random data into the byte slice
+	_, err := rand.Read(token)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate random token: %w", err)
+	}
+	return hex.EncodeToString(token), nil
 }
