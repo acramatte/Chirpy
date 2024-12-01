@@ -12,10 +12,11 @@ import (
 )
 
 type apiConfig struct {
-	fileserverHits atomic.Int32
-	db             *database.Queries
-	platform       string
-	jwtSecret      string
+	fileserverHits  atomic.Int32
+	db              *database.Queries
+	platform        string
+	jwtSecret       string
+	polkaWebhookKey string
 }
 
 func main() {
@@ -35,6 +36,10 @@ func main() {
 	if jwtSecret == "" {
 		log.Fatal("JWT_SECRET must be set")
 	}
+	polkaWebhookKey := os.Getenv("POLKA_KEY")
+	if polkaWebhookKey == "" {
+		log.Fatal("POLKA_KEY must be set")
+	}
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatalf("Error opening database: %s", err)
@@ -43,10 +48,11 @@ func main() {
 
 	fs := http.FileServer(http.Dir("."))
 	apiCfg := apiConfig{
-		fileserverHits: atomic.Int32{},
-		db:             dbQueries,
-		platform:       platform,
-		jwtSecret:      jwtSecret,
+		fileserverHits:  atomic.Int32{},
+		db:              dbQueries,
+		platform:        platform,
+		jwtSecret:       jwtSecret,
+		polkaWebhookKey: polkaWebhookKey,
 	}
 	apiCfg.fileserverHits.Store(0)
 
@@ -67,6 +73,8 @@ func main() {
 
 	serveMux.HandleFunc("POST /api/users", apiCfg.handlerUsersCreation)
 	serveMux.HandleFunc("PUT /api/users", apiCfg.handlerUsersUpdate)
+
+	serveMux.HandleFunc("POST /api/polka/webhooks", apiCfg.handlerUpgradeRed)
 
 	serveMux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
 	serveMux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
