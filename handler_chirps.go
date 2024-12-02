@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/acramatte/Chirpy/internal/auth"
@@ -79,12 +80,13 @@ func (cfg *apiConfig) handlerChirpDelete(w http.ResponseWriter, r *http.Request)
 }
 
 func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("STF")
-	dbChirps, err := cfg.db.GetChirps(r.Context())
+	s := r.URL.Query().Get("author_id")
+	dbChirps, err := cfg.getChirps(r.Context(), s)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't get all dbChirps", err)
+		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps", err)
 		return
 	}
+
 	var chirps []Chirp
 	for _, dbChirp := range dbChirps {
 		chirps = append(chirps, Chirp{
@@ -96,6 +98,19 @@ func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Reque
 		})
 	}
 	respondWithJSON(w, http.StatusOK, chirps)
+}
+
+func (cfg *apiConfig) getChirps(c context.Context, authorId string) ([]database.Chirp, error) {
+	if authorId == "" {
+		return cfg.db.GetChirps(c)
+	}
+
+	parsedID, err := uuid.Parse(authorId)
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't parse user id: %w", err)
+	}
+
+	return cfg.db.GetChirpsByAuthorId(c, parsedID)
 }
 
 func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request) {
