@@ -10,10 +10,26 @@ VALUES (
 RETURNING *;
 
 -- name: GetChirps :many
-SELECT * FROM chirps ORDER BY created_at;
+SELECT * FROM chirps
+ORDER BY
+    CASE
+        WHEN $1 = 'desc' THEN created_at
+        ELSE NULL -- Use NULL for invalid cases
+        END DESC,
+    CASE
+        WHEN $1 != 'desc' THEN created_at
+        END ASC;
 
 -- name: GetChirpsByAuthorId :many
-SELECT * FROM chirps WHERE user_id = $1 ORDER BY created_at;
+SELECT * FROM chirps WHERE user_id = $1
+ORDER BY
+    CASE
+        WHEN $2 = 'desc' THEN created_at
+        ELSE NULL -- Use NULL for invalid cases
+        END DESC,
+    CASE
+        WHEN $2 != 'desc' THEN created_at
+        END ASC;
 
 -- name: GetChirp :one
 SELECT * FROM chirps WHERE id = $1;

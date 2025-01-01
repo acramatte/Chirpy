@@ -80,8 +80,14 @@ func (cfg *apiConfig) handlerChirpDelete(w http.ResponseWriter, r *http.Request)
 }
 
 func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Request) {
+	sort := r.URL.Query().Get("sort")
+	order := strings.ToLower(sort)
+	if order != "asc" && order != "desc" {
+		order = "asc" // Default to ASC if invalid
+	}
+
 	s := r.URL.Query().Get("author_id")
-	dbChirps, err := cfg.getChirps(r.Context(), s)
+	dbChirps, err := cfg.getChirps(r.Context(), s, order)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps", err)
 		return
@@ -100,9 +106,9 @@ func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Reque
 	respondWithJSON(w, http.StatusOK, chirps)
 }
 
-func (cfg *apiConfig) getChirps(c context.Context, authorId string) ([]database.Chirp, error) {
+func (cfg *apiConfig) getChirps(c context.Context, authorId, sortOrder string) ([]database.Chirp, error) {
 	if authorId == "" {
-		return cfg.db.GetChirps(c)
+		return cfg.db.GetChirps(c, sortOrder)
 	}
 
 	parsedID, err := uuid.Parse(authorId)
@@ -110,7 +116,10 @@ func (cfg *apiConfig) getChirps(c context.Context, authorId string) ([]database.
 		return nil, fmt.Errorf("Couldn't parse user id: %w", err)
 	}
 
-	return cfg.db.GetChirpsByAuthorId(c, parsedID)
+	return cfg.db.GetChirpsByAuthorId(c, database.GetChirpsByAuthorIdParams{
+		UserID:  parsedID,
+		Column2: sortOrder,
+	})
 }
 
 func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request) {
