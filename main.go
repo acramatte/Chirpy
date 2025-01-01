@@ -24,22 +24,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	dbURL := os.Getenv("DB_URL")
-	if dbURL == "" {
-		log.Fatal("DB_URL must be set")
-	}
-	platform := os.Getenv("PLATFORM")
-	if platform == "" {
-		log.Fatal("PLATFORM must be set")
-	}
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		log.Fatal("JWT_SECRET must be set")
-	}
-	polkaWebhookKey := os.Getenv("POLKA_KEY")
-	if polkaWebhookKey == "" {
-		log.Fatal("POLKA_KEY must be set")
-	}
+	dbURL := MustEnv("DB_URL")
+	platform := MustEnv("PLATFORM")
+	jwtSecret := MustEnv("JWT_SECRET")
+	polkaWebhookKey := MustEnv("POLKA_KEY")
+
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatalf("Error opening database: %s", err)
@@ -85,4 +74,13 @@ func main() {
 	}
 	log.Println("Starting server on :8080")
 	log.Fatal(server.ListenAndServe())
+}
+
+// MustEnv reads an environment variable and terminates immediately if it is missing
+func MustEnv(key string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		log.Fatalf("Environment variable %s must be set", key)
+	}
+	return val
 }
