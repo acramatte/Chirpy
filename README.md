@@ -31,6 +31,34 @@
 
 A simple, Twitter-like API backend built in Go.
 
+## Setup and Development
+
+To get Chirpy running locally, you'll need to set up your environment and database.
+
+### Environment Variables
+
+Chirpy uses environment variables for configuration. These are typically loaded from a `.env` file in the project root during development. Create a `.env` file based on the `.env.example` file provided in the repository.
+
+The following variables are required:
+
+*   `DB_URL`: The connection string for your PostgreSQL database.
+    *   Example: `postgres://user:password@localhost:5432/chirpy?sslmode=disable` (for local development, SSL is often disabled).
+*   `PLATFORM`: A string identifying the platform (e.g., "local", "staging", "production").
+*   `JWT_SECRET`: A secure secret key used to sign and verify JSON Web Tokens. You can generate a suitable secret using OpenSSL:
+    ```bash
+    openssl rand -base64 64
+    ```
+*   `POLKA_KEY`: An API key for the Polka webhook, used for upgrading users to "Chirpy Red".
+
+### Database Migrations and Query Generation
+
+Chirpy uses [Goose](https://github.com/pressly/goose) for managing database schema migrations and [SQLC](https://sqlc.dev/) for generating type-safe Go code from SQL queries.
+
+*   **Migration Files:** Schema migration files are located in the `sql/schema/` directory. These define the database structure and changes.
+*   **Applying Migrations:** To set up or update your database schema, you will need to run Goose commands (e.g., `goose up`). Refer to the Goose documentation for installation and usage.
+*   **SQL Queries:** SQL queries are defined in `sql/queries/`.
+*   **Generating Go Code:** SQLC uses these queries and the schema to generate Go code in the `internal/database/` directory. If you modify queries or the schema, run `sqlc generate` to update the Go code. Refer to the SQLC documentation for setup.
+
 ## Features
 
 *   **Users:** Create and manage user accounts.
