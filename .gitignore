@@ -19,6 +19,7 @@
 !/assets/*
 
 !README.md
+!.env.example
 !LICENSE
 
 # DB stuff
