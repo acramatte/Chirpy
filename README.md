@@ -132,6 +132,16 @@ Stores refresh tokens used to obtain new access tokens.
 | `expires_at` | TIMESTAMP | NOT NULL, DEFAULT (creation + 60 days)    | Timestamp when the token expires          |
 | `revoked_at` | TIMESTAMP | NULL                                      | Timestamp if the token has been revoked   |
 
+## Running Tests
+
+To run all the unit tests in the project, navigate to the root directory of the project in your terminal and execute the following command:
+
+```bash
+go test ./...
+```
+
+This command will discover and run all test files (files ending with `_test.go`) in the current directory and all its subdirectories.
+
 ---
 
 Powered by Go!

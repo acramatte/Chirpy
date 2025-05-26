@@ -49,13 +49,13 @@ func (cfg *apiConfig) handlerUsersCreation(w http.ResponseWriter, r *http.Reques
 }
 
 func (cfg *apiConfig) handlerUsersUpdate(w http.ResponseWriter, r *http.Request) {
-	token, err := auth.GetBearerToken(r.Header)
+	token, err := cfg.getBearerToken(r.Header) // Replaced auth.GetBearerToken
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Couldn't find JWT", err)
 		return
 	}
 
-	userID, err := auth.ValidateJWT(token, cfg.jwtSecret)
+	userID, err := cfg.validateJWT(token, cfg.jwtSecret) // Replaced auth.ValidateJWT
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Couldn't validate JWT", err)
 		return

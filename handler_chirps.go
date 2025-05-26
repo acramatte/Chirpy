@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/acramatte/Chirpy/internal/auth"
+	// "github.com/acramatte/Chirpy/internal/auth" // Removed unused import
 	"github.com/acramatte/Chirpy/internal/database"
+	"github.com/go-chi/chi/v5" // Added for chi.URLParam
 	"github.com/google/uuid"
 	"net/http"
 	"strings"
@@ -21,13 +22,14 @@ type Chirp struct {
 }
 
 func (cfg *apiConfig) handlerChirpGet(w http.ResponseWriter, r *http.Request) {
-	userID, err := uuid.Parse(r.PathValue("chirpID"))
+	chirpIDStr := chi.URLParam(r, "chirpID") // Changed from r.PathValue
+	chirpID, err := uuid.Parse(chirpIDStr)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid chirp ID", err)
 		return
 	}
 
-	dbChirp, err := cfg.db.GetChirp(r.Context(), userID)
+	dbChirp, err := cfg.db.GetChirp(r.Context(), chirpID)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "Chirp not found", err)
 		return
@@ -42,19 +44,20 @@ func (cfg *apiConfig) handlerChirpGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) handlerChirpDelete(w http.ResponseWriter, r *http.Request) {
-	token, err := auth.GetBearerToken(r.Header)
+	token, err := cfg.getBearerToken(r.Header) // Replaced auth.GetBearerToken
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Couldn't find JWT", err)
 		return
 	}
 
-	userID, err := auth.ValidateJWT(token, cfg.jwtSecret)
+	userID, err := cfg.validateJWT(token, cfg.jwtSecret) // Replaced auth.ValidateJWT
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Couldn't validate JWT", err)
 		return
 	}
 
-	chirpID, err := uuid.Parse(r.PathValue("chirpID"))
+	chirpIDStr := chi.URLParam(r, "chirpID") // Changed from r.PathValue
+	chirpID, err := uuid.Parse(chirpIDStr)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid chirp ID", err)
 		return
@@ -123,12 +126,12 @@ func (cfg *apiConfig) getChirps(c context.Context, authorId, sortOrder string) (
 }
 
 func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request) {
-	token, err := auth.GetBearerToken(r.Header)
+	token, err := cfg.getBearerToken(r.Header) // Replaced auth.GetBearerToken
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized", err)
 		return
 	}
-	userID, err := auth.ValidateJWT(token, cfg.jwtSecret)
+	userID, err := cfg.validateJWT(token, cfg.jwtSecret) // Replaced auth.ValidateJWT
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized", err)
 		return

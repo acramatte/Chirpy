@@ -2,7 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"github.com/acramatte/Chirpy/internal/auth" // Added for auth functions
 	"github.com/acramatte/Chirpy/internal/database"
+	"github.com/google/uuid" // Added for uuid.UUID type in function signatures
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"log"
@@ -13,10 +15,15 @@ import (
 
 type apiConfig struct {
 	fileserverHits  atomic.Int32
-	db              *database.Queries
+	db              database.Querier // Changed from *database.Queries to database.Querier
 	platform        string
 	jwtSecret       string
 	polkaWebhookKey string
+
+	// New fields for injectable auth functions
+	validateJWT    func(tokenString, tokenSecret string) (uuid.UUID, error)
+	getBearerToken func(headers http.Header) (string, error)
+	getAPIKey      func(headers http.Header) (string, error)
 }
 
 func main() {
@@ -42,6 +49,11 @@ func main() {
 		platform:        platform,
 		jwtSecret:       jwtSecret,
 		polkaWebhookKey: polkaWebhookKey,
+
+		// Assign actual auth functions
+		validateJWT:    auth.ValidateJWT,
+		getBearerToken: auth.GetBearerToken,
+		getAPIKey:      auth.GetAPIKey,
 	}
 	apiCfg.fileserverHits.Store(0)
 
