@@ -2,13 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/acramatte/Chirpy/internal/auth"
+	// "github.com/acramatte/Chirpy/internal/auth" // Removed unused import
 	"github.com/google/uuid"
 	"net/http"
 )
 
 func (cfg *apiConfig) handlerUpgradeRed(w http.ResponseWriter, r *http.Request) {
-	apiKey, err := auth.GetAPIKey(r.Header)
+	apiKey, err := cfg.getAPIKey(r.Header) // Replaced auth.GetAPIKey
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Couldn't find api key", err)
 		return
